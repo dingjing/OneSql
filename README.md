@@ -75,3 +75,37 @@ Advanced example:
     
     $oc.Close()
     $oc.Dispose()
+
+Advanced example using Invoke-ParamCmd with Oracle's ArrayBind feature:
+
+    $db = New-DbConnection -DBName myOracleInstance -Username myUseranem -Password myPassword
+    Invoke-DbCmd -Connection $db -SQLText "truncate table ld_tst"
+    
+    $ins = @"
+    insert into ld_tst(str_key, num_key, num_val) 
+    values (:str_key, :num_key, dbms_random.value(1, 100))
+    returning num_val into :num_val
+    "@
+    
+    $p1 = New-Object Oracle.ManagedDataAccess.Client.OracleParameter(":str_key",
+    	[Oracle.ManagedDataAccess.Client.OracleDbType]::Varchar2, 10)
+    $p1.Direction = [System.Data.ParameterDirection]::Input
+    $p1.Value = 1..10 | % {"A$_"}
+    
+    $p2 = New-Object Oracle.ManagedDataAccess.Client.OracleParameter(":num_key",
+    	[Oracle.ManagedDataAccess.Client.OracleDbType]::Int32)
+    $p2.Direction = [System.Data.ParameterDirection]::Input
+    $p2.Value = 1..10
+    
+    $p3 = New-Object Oracle.ManagedDataAccess.Client.OracleParameter(":num_val",
+    	[Oracle.ManagedDataAccess.Client.OracleDbType]::Int32)
+    $p3.Direction = [System.Data.ParameterDirection]::Output
+    
+    Invoke-ParamCmd -Connection $db -SetupCmd {param($com)
+    		$com.CommandText = $ins
+    		$com.BindByName = $true
+    		$com.ArrayBindCount = 10
+    	} -Parameters $p1, $p2, $p3 `
+    	-ProcessOutput {param($out) $out[2].Value | % {$_.Value}}
+    	
+    $db.Dispose()

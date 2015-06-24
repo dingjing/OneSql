@@ -12,31 +12,41 @@ The module exposes 3 Cmdlets:
   * Invoke-DbCmd: Execute a SQL statement using ExecuteReader().
   * Invoke-ParamCmd: Execute a parameterized SQL statement, usually insert/update/delete/merge, or stored procedure using ExecuteNonQuery(). For SQL or SP without parameters, call Invoke-DbCmd instead.
   
-Database connections are defined in DbDictionary.ps1 as hashtable entries.
+Database connection definition is passed to New-DbConnection as a hashtable with the following keys.
+
+    # Assembly name is optional. It is necessary only if it is not in GAC.
+    # It can be specified with absolute, relative or no path.
+    # If without path, the assembly dll must be in the same or a sub folder.
+    Assembly = "Oracle.ManagedDataAccess.dll";  
+    
+    # Required.
+    ConnectionClass = "Oracle.ManagedDataAccess.Client.OracleConnection";
+    
+    # Required.
+    DataSourceKey = "DATA SOURCE";
+    
+    # Required. TNS alias or connect descriptor.
+    DataSourceValue = "";
+    
+    # Optional.
+    UserKey = "USER ID";
+    
+    # Optional.
+    PassKey = "PASSWORD";
+    
+    # Optional.
+    TrustedKey = "Integrated Security";
+
+Frequently used connections can be pre-defined in DbDictionary.ps1, and passed to New-DbConnection by DbName.
 
     $DbDictionary = @{
       MyOracleInstance = @{
-        # Assembly name is optional. It is necessary only if it is not in GAC.
-        # If provided, the assembly dll must be in the same or a sub folder.
-        Assembly = "Oracle.ManagedDataAccess.dll";  
-        
-        # Required.
+        Assembly = "Oracle.ManagedDataAccess.dll";
         ConnectionClass = "Oracle.ManagedDataAccess.Client.OracleConnection";
-        
-        # Required.
         DataSourceKey = "DATA SOURCE";
-        
-        # Required. TNS alias or connect descriptor.
-        DataSourceValue = "";
-        
-        # Required.
+        DataSourceValue = "MyOraTNS";
         UserKey = "USER ID";
-        
-        # Required.
         PassKey = "PASSWORD";
-        
-        # Optional.
-        #TrustedKey = "Integrated Security";
       };
       
       MySqlServerInstance = @{
@@ -47,9 +57,7 @@ Database connections are defined in DbDictionary.ps1 as hashtable entries.
         PassKey = "PASSWORD";
         TrustedKey = "INTEGRATED SECURITY";
       }
-    
-      # Other DBName entries
-    }
+    }    
 
 Simple example:
 
